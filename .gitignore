@@ -12,3 +12,4 @@ redis_data/
 *.log
 .idea/
 *.iml
+passwords.txt
