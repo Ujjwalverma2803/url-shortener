@@ -175,9 +175,15 @@ def delete_url(
 
 async def fire_analytics(slug: str, request: Request):
     try:
+        from config import settings
+        analytics_url = (
+            "http://analytics:8003"
+            if settings.environment == "development"
+            else "https://url-analytics-k782.onrender.com"
+        )
         async with httpx.AsyncClient() as client:
             await client.post(
-                "http://analytics:8003/analytics/track",
+                f"{analytics_url}/analytics/track",
                 json={
                     "slug": slug,
                     "ip": request.client.host,
