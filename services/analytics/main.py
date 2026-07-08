@@ -30,4 +30,4 @@ def health():
         "service": "analytics"
     }
 
-app.include_router(router) 
+app.include_router(router)

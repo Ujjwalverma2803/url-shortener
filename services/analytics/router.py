@@ -1,16 +1,43 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, BackgroundTasks
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from schemas import ClickEvent
-from tasks import track_click
 from database import get_db
 from models import Click
+from utils.geo import parse_user_agent
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
 
+def save_click(
+    slug: str,
+    ip: str,
+    user_agent: str,
+    referrer: str
+):
+    db = next(get_db())
+    try:
+        device_info = parse_user_agent(user_agent)
+        click = Click(
+            slug=slug,
+            ip_address=ip,
+            device_type=device_info["device_type"],
+            browser=device_info["browser"],
+            referrer=referrer or None
+        )
+        db.add(click)
+        db.commit()
+    except Exception:
+        db.rollback()
+    finally:
+        db.close()
+
 @router.post("/track")
-async def track(payload: ClickEvent):
-    track_click.delay(
+async def track(
+    payload: ClickEvent,
+    background_tasks: BackgroundTasks
+):
+    background_tasks.add_task(
+        save_click,
         slug=payload.slug,
         ip=payload.ip,
         user_agent=payload.user_agent,
@@ -56,11 +83,4 @@ def get_stats(
         "by_browser": {
             b: c for b, c in by_browser
         }
-    }
-
-@router.get("/health")
-def health():
-    return {
-        "status": "ok",
-        "service": "analytics"
     }
