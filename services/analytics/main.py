@@ -4,7 +4,10 @@ from router import router
 from database import engine
 from models import Base
 
-Base.metadata.create_all(bind=engine)
+try:
+    Base.metadata.create_all(bind=engine)
+except Exception as e:
+    print(f"Warning: Could not create tables: {e}")
 
 app = FastAPI(
     title="Analytics Service",

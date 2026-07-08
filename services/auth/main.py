@@ -1,10 +1,17 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPBearer
 from router import router
 from database import engine
 from models import Base
 
-Base.metadata.create_all(bind=engine)
+# Wrap in try/except so app starts even if DB has issues
+try:
+    Base.metadata.create_all(bind=engine)
+except Exception as e:
+    print(f"Warning: Could not create tables: {e}")
+
+security = HTTPBearer()
 
 app = FastAPI(
     title="Auth Service",
@@ -20,11 +27,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(router)
-
 @app.get("/health")
 def health():
     return {
         "status": "ok",
         "service": "auth"
     }
+
+app.include_router(router)

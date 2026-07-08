@@ -2,14 +2,14 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from config import settings
 
-# Add SSL args for Supabase
-connect_args = {}
-if "supabase" in settings.database_url:
-    connect_args = {"sslmode": "require"}
-
 engine = create_engine(
     settings.database_url,
-    connect_args=connect_args
+    connect_args={
+        "sslmode": "require",
+        "connect_timeout": 10
+    },
+    pool_pre_ping=True,
+    pool_recycle=300
 )
 
 SessionLocal = sessionmaker(
