@@ -1,11 +1,20 @@
 import redis
 from config import settings
 
-redis_client = redis.from_url(
-    settings.redis_url,
-    decode_responses=True,
-    ssl_cert_reqs=None
-)
+def get_redis_client():
+    if settings.redis_url.startswith("rediss://"):
+        return redis.from_url(
+            settings.redis_url,
+            decode_responses=True,
+            ssl=True,
+            ssl_cert_reqs="none"
+        )
+    return redis.from_url(
+        settings.redis_url,
+        decode_responses=True
+    )
+
+redis_client = get_redis_client()
 
 CACHE_TTL = 3600
 
